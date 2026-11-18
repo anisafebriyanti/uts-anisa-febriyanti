@@ -4,6 +4,9 @@
  * Sistem Rekomendasi & Pencarian Tempat Makan
  */
 
+// Sembunyikan deprecated notices di PHP 8.5+ agar tampilan website bersih dan rapi
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -47,13 +50,22 @@ if (!$pdo) {
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 
-            // Daftarkan fungsi kompatibilitas MySQL untuk SQLite
-            $pdo->sqliteCreateFunction('NOW', function() {
-                return date('Y-m-d H:i:s');
-            });
-            $pdo->sqliteCreateFunction('RAND', function() {
-                return mt_rand() / mt_getrandmax();
-            });
+            // Daftarkan fungsi kompatibilitas MySQL untuk SQLite (kompatibel PHP 7.x, 8.x s/d 8.5+)
+            if (method_exists($pdo, 'createFunction')) {
+                $pdo->createFunction('NOW', function() {
+                    return date('Y-m-d H:i:s');
+                });
+                $pdo->createFunction('RAND', function() {
+                    return mt_rand() / mt_getrandmax();
+                });
+            } else {
+                @$pdo->sqliteCreateFunction('NOW', function() {
+                    return date('Y-m-d H:i:s');
+                });
+                @$pdo->sqliteCreateFunction('RAND', function() {
+                    return mt_rand() / mt_getrandmax();
+                });
+            }
         } catch (PDOException $e) {
             $pdo = null;
         }
