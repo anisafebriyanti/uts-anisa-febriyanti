@@ -80,14 +80,18 @@ if (!$pdo) {
     </div>");
 }
 
-// Base URL otomatis berdasarkan URL browser saat ini
+// Base URL otomatis berdasarkan environment (Vercel vs Localhost XAMPP)
 if (!defined('BASE_URL')) {
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) ? "https://" : "http://";
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-    $projectRoot = preg_replace('#/(admin|ajax|api).*$#', '', $scriptDir);
-    $baseUrl = rtrim($protocol . $host . $projectRoot, '/') . '/';
-    define('BASE_URL', $baseUrl);
+    if (getenv('VERCEL') || (isset($_SERVER['HTTP_HOST']) && stripos($_SERVER['HTTP_HOST'], 'vercel.app') !== false)) {
+        define('BASE_URL', '/');
+    } else {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        $projectRoot = preg_replace('#/(admin|ajax|api).*$#', '', $scriptDir);
+        $baseUrl = rtrim($protocol . $host . $projectRoot, '/') . '/';
+        define('BASE_URL', $baseUrl);
+    }
 }
 
 // Global App Constants
